@@ -1,0 +1,103 @@
+{
+  "info": {
+    "name": "Jolmood Backend",
+    "_postman_id": "jolmood-collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"aya@test.com\",\n  \"password\": \"1234\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.environment.set('token', json.access_token || json.token || '');",
+              "pm.expect(pm.environment.get('token')).to.not.eql('');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Media - Upload (form-data)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/media/upload",
+          "host": ["{{baseUrl}}"],
+          "path": ["media", "upload"]
+        },
+        "body": {
+          "mode": "formdata",
+          "formdata": [{ "key": "file", "type": "file", "src": [] }]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.environment.set('media_id', json.media_id || '');",
+              "pm.expect(pm.environment.get('media_id')).to.not.eql('');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Posts - Create with media_id",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/posts/",
+          "host": ["{{baseUrl}}"],
+          "path": ["posts", ""]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"content\": \"Hello Jolmood with media!\",\n  \"media_id\": \"{{media_id}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Media - Get stream",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/media/{{media_id}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["media", "{{media_id}}"]
+        }
+      }
+    }
+  ]
+}
+
+
+

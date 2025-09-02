@@ -1,0 +1,186 @@
+version: "3.9"
+
+networks:
+  jolmood-net:
+
+services:
+  gateway:
+    build: ./gateway-service
+    container_name: gateway
+    ports:
+      - "8080:80"
+    depends_on:
+      - auth-service
+      - user-service
+      - post-service
+      - appointment-service
+      - admin-service
+      - media-service
+    networks:
+      - jolmood-net
+
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    environment:
+      - DATABASE_URL=${AUTH_DB_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - "5001:8000"
+    depends_on:
+      - db_auth
+    networks:
+      - jolmood-net
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    environment:
+      - DATABASE_URL=${USER_DB_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - "5002:8000"
+    depends_on:
+      - db_user
+    networks:
+      - jolmood-net
+
+  post-service:
+    build: ./post-service
+    container_name: post-service
+    environment:
+      - DATABASE_URL=${POST_DB_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - "5003:8000"
+    depends_on:
+      - db_post
+    networks:
+      - jolmood-net
+
+  appointment-service:
+    build: ./appointment-service
+    container_name: appointment-service
+    environment:
+      - DATABASE_URL=${APP_DB_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - "5004:8000"
+    depends_on:
+      - db_app
+    networks:
+      - jolmood-net
+
+  admin-service:
+    build: ./admin-service
+    container_name: admin-service
+    environment:
+      - DATABASE_URL=${ADMIN_DB_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - "5005:8000"
+    depends_on:
+      - db_admin
+    networks:
+      - jolmood-net
+
+  db_auth:
+    image: postgres:15
+    container_name: db_auth
+    environment:
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_pass
+      POSTGRES_DB: auth_db
+    ports:
+      - "5433:5432"
+    networks:
+      - jolmood-net
+
+  db_user:
+    image: postgres:15
+    container_name: db_user
+    environment:
+      POSTGRES_USER: user_user
+      POSTGRES_PASSWORD: user_pass
+      POSTGRES_DB: user_db
+    ports:
+      - "5434:5432"
+    networks:
+      - jolmood-net
+
+  db_post:
+    image: postgres:15
+    container_name: db_post
+    environment:
+      POSTGRES_USER: post_user
+      POSTGRES_PASSWORD: post_pass
+      POSTGRES_DB: post_db
+    ports:
+      - "5435:5432"
+    networks:
+      - jolmood-net
+
+  db_app:
+    image: postgres:15
+    container_name: db_app
+    environment:
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: app_pass
+      POSTGRES_DB: appointment_db
+    ports:
+      - "5436:5432"
+    networks:
+      - jolmood-net
+
+  db_admin:
+    image: postgres:15
+    container_name: db_admin
+    environment:
+      POSTGRES_USER: admin_user
+      POSTGRES_PASSWORD: admin_pass
+      POSTGRES_DB: admin_db
+    ports:
+      - "5437:5432"
+    networks:
+      - jolmood-net
+
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    ports:
+      - "27017:27017" # local only
+    networks:
+      - jolmood-net
+    volumes:
+      - mongo_data:/data/db
+
+  mongo-express:
+    image: mongo-express:1
+    container_name: mongo-express
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_BASICAUTH=false
+    depends_on:
+      - mongo
+    ports:
+      - "8081:8081"
+    networks:
+      - jolmood-net
+
+  media-service:
+    build: ./media-service
+    container_name: media-service
+    env_file: .env
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - GRIDFS_BUCKET=${GRIDFS_BUCKET}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - mongo
+    ports:
+      - "5006:8000"
+    networks:
+      - jolmood-net
+
+volumes:
+  mongo_data:
